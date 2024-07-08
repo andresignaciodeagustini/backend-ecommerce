@@ -1,9 +1,8 @@
 const express = require('express')
-const router = express.Router();
+const router = express.Router(); 
+const productController = require('../controllers/product.controller')
+router.get("/products", productController.getProducts)
 
-router.get("/products", (req, res) => {
-    res.send("GET products working!!")
-})
 
 
 module.exports = router;
