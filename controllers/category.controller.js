@@ -1,8 +1,29 @@
 const Category = require ('../models/category.models')
+
+
 async function getCategories(req, res) {
     try {
-        console.log("asdfasdfasdf")
        
+       
+        const categories = await Category.find();
+
+        if(categories.length === 0) {
+            return res.status(404).send({
+                ok:false,
+                message: "No hay categorias registradas"
+            })
+
+        }
+
+        res.status(200).send({
+            ok: true, 
+            message: "Categorías obtenidas",
+            categories
+
+        })
+
+
+
     } catch (error) {
         console.error(error);
         res.status(500).send({

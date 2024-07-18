@@ -1,12 +1,23 @@
 const Product = require('../models/product.models');
 
+// Obtener productos con paginación
 async function getProducts(req, res) {
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 4; // Cambia el límite a 4 productos por página
+
     try {
-        const products = await Product.find();
+        const products = await Product.find()
+            .populate("category", "name")
+            .skip(page * limit)
+            .limit(limit);
+
+        const totalProducts = await Product.countDocuments();
+
         res.status(200).send({
             ok: true,
             message: "Productos obtenidos correctamente",
-            products
+            products,
+            totalProducts
         });
     } catch (error) {
         console.error(error);
@@ -17,9 +28,15 @@ async function getProducts(req, res) {
     }
 }
 
+// Crear un nuevo producto
 async function postProduct(req, res) {
     try {
         const product = new Product(req.body);
+
+        if (req.file?.filename) {
+            product.image = req.file.filename;
+        }
+
         const newProduct = await product.save();
         res.status(201).send({
             ok: true,
@@ -35,10 +52,11 @@ async function postProduct(req, res) {
     }
 }
 
+// Obtener producto por ID
 async function getProductById(req, res) {
     try {
         const productId = req.params.id;
-        const product = await Product.findById(productId);
+        const product = await Product.findById(productId).populate("category", "name");
         
         if (!product) {
             return res.status(404).send({
@@ -61,6 +79,7 @@ async function getProductById(req, res) {
     }
 }
 
+// Eliminar producto por ID
 async function deleteProduct(req, res) {
     try {
         const productId = req.params.id;
@@ -87,13 +106,14 @@ async function deleteProduct(req, res) {
     }
 }
 
+// Actualizar producto por ID
 async function updateProduct(req, res) {
     try {
         const productId = req.params.id;
-        const update = req.body;
-        const data = Date.now();
-
-        const updatedProduct = await Product.findByIdAndUpdate(productId, data, update, { new: true });
+        const update = req.body; // Aquí deberías tener los datos que quieres actualizar
+        update.updatedAt = Date.now(); // Por ejemplo, agregando updatedAt con la fecha actual
+        
+        const updatedProduct = await Product.findByIdAndUpdate(productId, update, { new: true });
         
         if (!updatedProduct) {
             return res.status(404).send({
@@ -118,8 +138,8 @@ async function updateProduct(req, res) {
 
 module.exports = {
     getProducts,
+    postProduct,
     getProductById,
     deleteProduct,
-    postProduct,
     updateProduct
 };
